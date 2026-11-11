@@ -98,8 +98,9 @@ jobs:
             implementation(platform("androidx.compose:compose-bom:2024.02.00"))
             implementation("androidx.compose.ui:ui")
             implementation("androidx.compose.material3:material3")
-            implementation("rikka.shizuku:api:13.1.5")
-            implementation("rikka.shizuku:provider:13.1.5")
+            // Fixed Shizuku Maven Group ID
+            implementation("dev.rikka.shizuku:api:13.1.5")
+            implementation("dev.rikka.shizuku:provider:13.1.5")
         }
         EOF
 
@@ -358,6 +359,8 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: 8.5
 
     - name: Compile Debug APK
       run: gradle assembleDebug
