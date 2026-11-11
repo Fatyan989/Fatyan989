@@ -98,7 +98,6 @@ jobs:
             implementation(platform("androidx.compose:compose-bom:2024.02.00"))
             implementation("androidx.compose.ui:ui")
             implementation("androidx.compose.material3:material3")
-            // Fixed Shizuku Maven Group ID
             implementation("dev.rikka.shizuku:api:13.1.5")
             implementation("dev.rikka.shizuku:provider:13.1.5")
         }
@@ -138,7 +137,7 @@ jobs:
         </manifest>
         EOF
 
-        # 6. MainActivity.kt (Complete Logic)
+        # 6. MainActivity.kt
         cat << 'EOF' > app/src/main/java/com/example/extremecharge/MainActivity.kt
         package com.example.extremecharge
 
@@ -170,13 +169,23 @@ jobs:
 
         object ShizukuRunner {
             fun hasPermission(): Boolean {
-                return if (Shizuku.isPre_V11()) false
-                else Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+                return try {
+                    Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+                } catch (e: Throwable) {
+                    false
+                }
             }
 
             fun exec(cmd: String): String {
                 return try {
-                    val process = Shizuku.newProcess(arrayOf("sh", "-c", cmd), null, null)
+                    val method = Shizuku::class.java.getDeclaredMethod(
+                        "newProcess",
+                        Array<String>::class.java,
+                        Array<String>::class.java,
+                        String::class.java
+                    )
+                    method.isAccessible = true
+                    val process = method.invoke(null, arrayOf("sh", "-c", cmd), null, null) as Process
                     val reader = BufferedReader(InputStreamReader(process.inputStream))
                     val output = reader.readText()
                     process.waitFor()
@@ -370,3 +379,4 @@ jobs:
       with:
         name: ExtremeCharge-debug-apk
         path: app/build/outputs/apk/debug/*.apk
+        
